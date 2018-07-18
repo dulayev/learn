@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<title>HTML Tutorial</title>
+<body>
+
+<textarea id="input" rows=25 cols=100>
+{ 
+    "type" : "class",
+    "classes" : [
+        { "name" : "1" },
+        { "name" : "2" }
+    ]
+}     
+</textarea>
+<button onclick="render(input.value, 'svg1');">Click to change to yellow</button>
+
+<br/>
+
+<svg id="svg1" xmlns="http://www.w3.org/2000/svg" style="width: 13.5in; height: 10in; background: blanchedalmond">
+</svg>
+<script>
+
+//function 
+        
+function render(text, svg) {
+
+var svg_element = document.getElementById(svg); //Get svg element
+
+var scheme = JSON.parse(text);
+
+if (scheme.type == 'class') {
+	var x = 50
+    for (item in scheme.classes) {
+        var newElement = document.createElementNS("http://www.w3.org/2000/svg", 'rect');
+        newElement.setAttribute("x", x);
+        newElement.setAttribute("y", 50);
+        newElement.setAttribute("rx", 15);
+        newElement.setAttribute("ry", 15);
+        newElement.setAttribute("width", 150);
+        newElement.setAttribute("height", 250);
+        newElement.setAttribute("style", "fill:white;stroke:black;stroke-width:1;");
+
+//        x="50" y="20" rx="20" ry="20" width="150" height="150"
+        svg_element.appendChild(newElement);
+
+        x += 200;
+    }
+}
+
+	// circle1.style.fill=text	
+	//    circle1.style.fill=
+}
+
+render(input.value, 'svg1');
+
+</script>
+
+</body>
+</html>
