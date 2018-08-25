@@ -1,5 +1,4 @@
-# clear field
-field = ["   ", "   ", "   "]
+import random
 
 def SomebodyWins(field, who): # who can be who or 'o'
     if field[0][0] == who and field[1][1] == who and field[2][2] == who:
@@ -23,7 +22,7 @@ def SomebodyWins(field, who): # who can be who or 'o'
 
     return False
 
-def Replace(line, pos, replace_with):
+def Replace(text, pos, replace_with):
     return text[:pos] + replace_with + text[pos + 1:]
 
 def PrintField(field):
@@ -47,8 +46,27 @@ def InputHumanMove(field, play_for): # play_for is 'x' or 'o'
             continue
 
         move_good = True
-        field[row][col] = play_for
-   
+        field[row] = Replace(field[row], col, play_for)
+
+def ComputerMove(field, play_for): # play_for is 'x' or 'o'
+    move_good = False
+    while not move_good:
+        
+        row = int(random.uniform(0, 2.99))
+        col = int(random.uniform(0, 2.99))
+        
+        if field[row][col] != ' ':
+            continue
+        
+        move_good = True
+        field[row] = Replace(field[row], col, play_for)
+
+def FieldFull(field):
+    if " " in  field[0] + field[1] + field[2]:
+        return False
+    else:
+        return True
+
 
 def Test():    
     assert SomebodyWins(["xoo", "oxo", "oox"], 'x')
@@ -60,9 +78,44 @@ def Test():
     PrintField(some_field)
     InputHumanMove(some_field, 'x')
     PrintField(some_field)
-    assert Replace
+    print()
+    ComputerMove(some_field, 'o')
+    PrintField(some_field)
+    assert Replace("mouse", 0, "l") == "louse"
+    assert Replace("pool", 3, "r") == "poor"
+    
             
-Test()        
+#Test()        
+    
+# clear field
+field = ["   ", "   ", "   "]
+game_over = False
+while not game_over:
+    InputHumanMove(field, "x")
+    PrintField(field)
+    if SomebodyWins(field, "x"):
+        print("Human won!")
+        game_over = True
+        break
+    if FieldFull(field):
+        print("Game over")
+        game_over = True
+        break
+    ComputerMove(field, "o")
+    print()
+    PrintField(field)
+    if SomebodyWins(field, "o"):
+        print("Human lost!")
+        game_over = True
+        break
+    if FieldFull(field):
+        print("Game over")
+        game_over = True
+        break
+    
+
+   
+    
     
 
 # do step until somebody wins
