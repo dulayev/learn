@@ -48,7 +48,7 @@ def InputHumanMove(field, play_for): # play_for is 'x' or 'o'
         move_good = True
         field[row] = Replace(field[row], col, play_for)
 
-def ComputerMove(field, play_for): # play_for is 'x' or 'o'
+def ComputerRandomMove(field, play_for): # play_for is 'x' or 'o'
     move_good = False
     while not move_good:
         
@@ -61,6 +61,41 @@ def ComputerMove(field, play_for): # play_for is 'x' or 'o'
         move_good = True
         field[row] = Replace(field[row], col, play_for)
 
+def ComputerSmartMove(field, play_for):
+    for row in [0,1,2]:
+        for col in [0,1,2]:
+            if field[row][col] != ' ':
+                continue
+            next_field = field.copy()
+            next_field[row] = Replace(next_field[row], col, play_for)
+          
+            if SomebodyWins(next_field, play_for):
+                field[row] = next_field[row]
+                return
+    
+    ComputerMove(field, play_for)
+
+def ComputerMove(virtual_field, play_for):
+    for row in [0,1,2]:
+        for col in [0,1,2]:
+            if field[row][col] != ' ':
+                continue
+            virtual_field = field.copy()
+            virtual_field[row] = Replace(virtual_field[row], col, "x")
+            if SomebodyWins(virtual_field, "x"):
+                 virtual_field[row] = Replace(virtual_field[row], col, "o")
+                 field[row] = virtual_field[row]
+                 return
+    
+    ComputerRandomMove(field, play_for)
+
+def ComputerSuperSmartMove(field, play_for):
+    if field[1][1] == ' ':
+        field[1] = Replace(field[1], 1, play_for)
+    else:
+        ComputerSmartMove(field, play_for)
+    
+                        
 def FieldFull(field):
     if " " in  field[0] + field[1] + field[2]:
         return False
@@ -91,17 +126,7 @@ def Test():
 field = ["   ", "   ", "   "]
 game_over = False
 while not game_over:
-    InputHumanMove(field, "x")
-    PrintField(field)
-    if SomebodyWins(field, "x"):
-        print("Human won!")
-        game_over = True
-        break
-    if FieldFull(field):
-        print("Game over")
-        game_over = True
-        break
-    ComputerMove(field, "o")
+    ComputerSuperSmartMove(field, "o")
     print()
     PrintField(field)
     if SomebodyWins(field, "o"):
@@ -112,21 +137,20 @@ while not game_over:
         print("Game over")
         game_over = True
         break
-    
+    InputHumanMove(field, "x")
+    PrintField(field)
+    if SomebodyWins(field, "x"):
+        print("Human won!")
+        game_over = True
+        break
+    if FieldFull(field):
+        print("Game over")
+        game_over = True
+        break
 
    
+
+
     
-    
 
-# do step until somebody wins
-# computer plays X, human plays O
 
-# input human step
-
-# check if human won, if won print 'you win' and exit
-# if no empty cells print 'draw' and exit
-
-# make computer step
-
-# check if computer won, print 'you lost' and exit
-# if no empty cells print 'draw' and exit
