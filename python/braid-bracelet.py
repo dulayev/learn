@@ -13,6 +13,15 @@ if side_sweets_in_the_end == "Yes":
     side_sweets_in_the_end_len = 0.3
 else:
     side_sweets_in_the_end_len = 0
+    
+slanting_sweets_in_the_start = float(input("Slanting sweets in the start(count): "))
+if slanting_sweets_in_the_start > 0:
+    lenght_of_the_slanting_sweets_in_the_start = float(input("Lenght of the slanting sweets in the start: "))
+
+slanting_sweets_in_the_end= float(input("Slanting sweets in the end(count): "))
+if slanting_sweets_in_the_end > 0:
+    lenght_of_the_slanting_sweets_in_the_end = float(input("Lenght of the slanting sweets in the end: "))
+
 
 standart_sweets_in_the_start = float(input("Standart sweets in the start(count): "))
 if width_of_the_bracelet %2 != 0:
@@ -69,8 +78,11 @@ empty_rows = (leght_of_bracelet - (leght_of_scheme/rows_per_cm + side_sweets_in_
                                   rows_in_the_sweets_in_the_start/rows_per_cm + \
                                   length_of_the_loops \
                                   +clamps_len + \
-                                  quadratic_knots * 0.2))*rows_per_cm
+                                  +lenght_of_the_slanting_sweets_in_the_end \
+                                  +lenght_of_the_slanting_sweets_in_the_start\
+                                  +quadratic_knots * 0.2))*rows_per_cm
 print("empty roads:{}".format (empty_rows))
+
         
 
     
