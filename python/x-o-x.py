@@ -1,6 +1,7 @@
 import random
+import collections
 
-def SomebodyWins(field, who): # who can be who or 'o'
+def SomebodyWins(field, who): # who can be 'x' or 'o'
     if field[0][0] == who and field[1][1] == who and field[2][2] == who:
         return True
     if field[0][2] == who and field[1][1] == who and field[2][0] == who:
@@ -102,6 +103,75 @@ def FieldFull(field):
     else:
         return True
 
+def MoveAtPosition(field, row, col, play_for):
+    field[row] = Replace(field[row], col, play_for)
+
+def Opponent(play_for):
+    return "x" if play_for == "o" else "o"
+
+def MoveBetter(move1, move2, play_for):
+    if move1[Opponent(play_for)] > 0 and move2[Opponent(play_for)] == 0:
+        return False
+    if move2[Opponent(play_for)] > 0 and move1[Opponent(play_for)] == 0:
+        return True
+
+    if move1[play_for] > 0 and move2[play_for] == 0:
+        return True
+    if move2[play_for] > 0 and move1[play_for] == 0:
+        return False
+
+    if move1[" "] > 0 and move2[" "] == 0:
+        return False
+    if move2[" "] > 0 and move1[" "] == 0:
+        return True
+    
+    return False
+
+def BruteForceComputerMove(field, play_for):
+    best_result = collections.Counter({})
+    best_row = -1
+    best_col = -1
+    for row in [0,1,2]:
+        for col in [0,1,2]:
+            if field[row][col] != ' ':
+                continue
+            future_field = field.copy()
+            MoveAtPosition(future_field, row, col, play_for)
+            if SomebodyWins(future_field, play_for):
+                field[row] = future_field[row]
+                return collections.Counter({ play_for:1 })
+                
+            if FieldFull(future_field):
+                field[row] = future_field[row]
+                return collections.Counter({ " ":1 })
+
+            result = BruteForceHumanMove(future_field, Opponent(play_for))
+            if MoveBetter(result, best_result, play_for):
+                best_result = result
+                best_row = row
+                best_col = col
+            
+    MoveAtPosition(field, best_row, best_col, play_for)
+    return best_result
+
+                
+def BruteForceHumanMove(field, play_for):
+    all_results = collections.Counter({})
+    for row in [0,1,2]:
+        for col in [0,1,2]:
+            if field[row][col] != ' ':
+                continue
+            future_field = field.copy()
+            MoveAtPosition(future_field, row, col, play_for)
+            if SomebodyWins(future_field, play_for):
+                return collections.Counter({ play_for:1 })
+                
+            if FieldFull(future_field):
+                return collections.Counter({ " ":1 })
+
+            result = BruteForceComputerMove(future_field, Opponent(play_for))
+            all_results.update(result)
+            return all_results                
 
 def Test():    
     assert SomebodyWins(["xoo", "oxo", "oox"], 'x')
@@ -118,6 +188,7 @@ def Test():
     PrintField(some_field)
     assert Replace("mouse", 0, "l") == "louse"
     assert Replace("pool", 3, "r") == "poor"
+    # TODO: test for Opponent
     
             
 #Test()        
@@ -126,7 +197,7 @@ def Test():
 field = ["   ", "   ", "   "]
 game_over = False
 while not game_over:
-    ComputerSuperSmartMove(field, "o")
+    BruteForceComputerMove(field, "o")
     print()
     PrintField(field)
     if SomebodyWins(field, "o"):
