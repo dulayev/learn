@@ -58,7 +58,8 @@ mass = 1e-3 # 1 gramm
 def calc_sin(dx, dy):
     return dy / math.sqrt(dx * dx + dy * dy)
 
-for step in range(20):
+def update(step):
+    global y
     stretched_len = sum([math.sqrt((y[i+1] - y[i])**2 + delta_x**2) for i in range(N-1)])
     max_abs_y = max(map(abs, y))
     print(f"{step} L: {stretched_len} Ymax: {max_abs_y}")
@@ -72,42 +73,15 @@ for step in range(20):
         next_y[i] = y[i] + vy[i] * delta_t + a * delta_t * delta_t / 2
         vy[i] += a * delta_t
     y = next_y.copy()
-'''
+    line.set_ydata(y)
+
 plt.ion()
-offset = [0] * 1000
-xdata = [0.1 * i for i in range(1000)]
-ydata = [math.sin(i/100) for i in range(1000)]
+xdata = [i * string_len / (N - 1) for i in range(N)]
+ydata = y
 axes = plt.gca()
-axes.set_xlim(-10, 10)
-axes.set_ylim(-10, 10)
+axes.set_xlim(0, string_len)
+axes.set_ylim(-max_pull, max_pull)
 line, = axes.plot(xdata, ydata, 'r-')
 
-def update(i):
-    #xdata.append(i)
-    xdata = [x * math.cos(i/math.pi) for x in range(-10, 10)]
-    ydata = [x * math.sin(i/math.pi) for x in range(-10, 10)]
-    line.set_xdata(xdata)
-    line.set_ydata(ydata)
-
-#ani = matplotlib.animation.FuncAnimation(plt.gcf(), update, frames=100, \
-                                       #interval=100, repeat=True)
-
-#plt.show()
-
-def draw(data):
-    #plt.clear()
-    plt.plot(data)
-    plt.ion()
-    plt.show()
-    plt.draw()
-
-def make_step(offset):
-    for i in range(0, len(offset)):
-        offset[i] = offset[i] + 0.1
-
-for i in range(0, 1000):
-    draw(offset)
-    time.sleep(1)
-    make_step(offset)
-    print(offset[0])
-'''
+ani = matplotlib.animation.FuncAnimation( \
+    plt.gcf(), update, frames=30, interval=200, repeat=False)
