@@ -50,6 +50,7 @@ for i in range(number_of_pieces_1_part + 1, N):
     y[i] = max_pull-little_y*(number_of_pieces_2_part-(N-i))
 
 vy = [0]*N
+next_y = [0]*N
 delta_t = 1e-5 # 10 microseconds
 delta_x = string_len / (N - 1)
 mass = 1e-3 # 1 gramm
@@ -57,9 +58,10 @@ mass = 1e-3 # 1 gramm
 def calc_sin(dx, dy):
     return dy / math.sqrt(dx * dx + dy * dy)
 
-for step in range(1000):
+for step in range(20):
     stretched_len = sum([math.sqrt((y[i+1] - y[i])**2 + delta_x**2) for i in range(N-1)])
-    print(f"{step} L: {stretched_len} Ymax: {max(y)}")
+    max_abs_y = max(map(abs, y))
+    print(f"{step} L: {stretched_len} Ymax: {max_abs_y}")
     for i in range(1, N - 1):
         delta_y_left = y[i] - y[i-1]
         delta_y_right = y[i + 1] - y[i]
@@ -67,9 +69,9 @@ for step in range(1000):
         sin_right = calc_sin(delta_x, delta_y_right)
         strength = exp_coeff_firm * (stretched_len - string_len) / N
         a = strength * (sin_right - sin_left) / (mass / N)
+        next_y[i] = y[i] + vy[i] * delta_t + a * delta_t * delta_t / 2
         vy[i] += a * delta_t
-        y[i] += vy[i]
-
+    y = next_y.copy()
 '''
 plt.ion()
 offset = [0] * 1000
