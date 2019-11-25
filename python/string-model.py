@@ -2,15 +2,45 @@
 import matplotlib.pyplot as plt
 import matplotlib.animation
 import time
-
 import math
+
+def find_circle(points):
+    ((x0, y0), (x1, y1), (x2, y2)) = points
+    
+    def find_line(x0, x1, y0, y1):
+        a = x1 - x0
+        b = y1 - y0
+        c = (a * (x1 + x0) + b * (y1 + y0)) / 2
+        return a, b, c
+
+    al, bl, cl = find_line(x0, x1, y0, y1)
+    ar, br, cr = find_line(x1, x2, y1, y2)
+
+    det = al * br - ar * bl
+    if abs(det) < 1e-10:
+        return None
+    x = (cl * br - cr * bl) / det
+    y = (al * cr - ar * cl) / det
+    r = math.sqrt((x - x1) **2 + (y - y1) **2)
+    return x, y, r
+
+def test_find_circle():
+    xc, yc = 8, 5
+    radius = 4
+    points = [(xc + radius * math.sin(alpha), yc + radius * math.cos(alpha)) \
+              for alpha in [0.5, 1.2, 2.0]]
+    xc2, yc2, radius2 = find_circle(points)
+    assert(xc == round(xc2, 7))
+    assert(yc == round(yc2, 7))
+    assert(radius == round(radius2, 7))
+
 
 steel_young_modulus = 210e9 # steel
 string_len = 0.627
 string_diameter = 0.15e-3
 string_section_area = math.pi * (string_diameter ** 2) / 4
 theory_coeff_firm = string_section_area * steel_young_modulus / string_len
-# print(f"Коэфф. упругости из справочника: {theory_coeff_firm}")
+print(f"Коэфф. упругости из справочника: {theory_coeff_firm}")
 
 exp_string_len = string_len / 2
 exp_string_dev = 3e-3
@@ -25,7 +55,7 @@ exp_strength = gravity_const * exp_mass / (2 * sin_alpha)
 
 exp_coeff_firm = exp_strength / exp_string_ext
 
-# print(f"Экспериментальный коэффициент упругости: {exp_coeff_firm}")
+print(f"Экспериментальный коэффициент упругости: {exp_coeff_firm}")
 
 N = 1000
 y = [0]*N
@@ -68,8 +98,21 @@ def update(step):
         delta_y_right = y[i + 1] - y[i]
         sin_left = calc_sin(delta_x, delta_y_left)
         sin_right = calc_sin(delta_x, delta_y_right)
-        strength = exp_coeff_firm * (stretched_len - string_len) / N
-        a = strength * (sin_right - sin_left) / (mass / N)
+        strength_stretch = theory_coeff_firm * (stretched_len - string_len) / N
+
+        x = i * delta_x
+        points = [(x - delta_x, y[i - 1]), (x, y[i]), (x + delta_x, y[i + 1])]
+
+        strength_bend = 0.0
+
+        res = find_circle(points)
+        if res != None:
+            circle_x, circle_y, radius = res
+            strength_bend_abs = (steel_young_modulus * math.pi * string_diameter**4) / \
+                                (radius * 64 * delta_x)
+            strength_bend = math.copysign(strength_bend_abs, y[i] - circle_y)
+        
+        a = (strength_stretch * (sin_right - sin_left) + strength_bend) / (mass / N)
         next_y[i] = y[i] + vy[i] * delta_t + a * delta_t * delta_t / 2
         vy[i] += a * delta_t
     y = next_y.copy()
@@ -84,4 +127,4 @@ axes.set_ylim(-max_pull, max_pull)
 line, = axes.plot(xdata, ydata, 'r-')
 
 ani = matplotlib.animation.FuncAnimation( \
-    plt.gcf(), update, frames=30, interval=200, repeat=False)
+    plt.gcf(), update, frames=30000, interval=1, repeat=False)
