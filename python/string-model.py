@@ -34,7 +34,6 @@ def test_find_circle():
     assert(yc == round(yc2, 7))
     assert(radius == round(radius2, 7))
 
-
 steel_young_modulus = 210e9 # steel
 string_len = 0.627
 string_diameter = 0.15e-3
@@ -60,29 +59,34 @@ print(f"Экспериментальный коэффициент упругос
 N = 1000
 y = [0]*N
 part_of_pulling_string = 0.2
-max_pull = 0.01 #10 мм
+max_pull = 0.01 #10 mm
+finger_radius = 0.05 #50 mm
+finger_x = part_of_pulling_string * string_len
 
-#первая часть
+def find_touch_point(cx, cy, radius):
+    center_distance2 = cx**2 + cy**2
+    point_distance = math.sqrt(center_distance2 - radius**2)
+    cos_sum = (point_distance * cx - radius * cy) / center_distance2
+    sin_sum = (point_distance * cy + radius * cx) / center_distance2
+    return (point_distance * cos_sum, point_distance * sin_sum)
 
-number_of_pieces_1_part = int(N * part_of_pulling_string) 
-little_y = max_pull/number_of_pieces_1_part
+left_touch_point = find_touch_point(finger_x, max_pull, finger_radius)
+right_touch_point = find_touch_point(string_len - finger_x, max_pull, finger_radius)
 
-for i in range(1, number_of_pieces_1_part + 1):
-    y[i] = little_y*i
+delta_x = string_len / (N - 1)
 
-#вторая часть
-part_of_pulling_string_2 = 1 - part_of_pulling_string
-number_of_pieces_2_part = N - number_of_pieces_1_part
-#1000*(part_of_pulling_string_2)
-little_y = max_pull / (number_of_pieces_2_part - 1)
-
-for i in range(number_of_pieces_1_part + 1, N):
-    y[i] = max_pull-little_y*(number_of_pieces_2_part-(N-i))
+for i in range(N):
+    x = i * delta_x
+    if x < left_touch_point[0]:
+        y[i] = left_touch_point[1] * x / left_touch_point[0]
+    elif x > string_len - right_touch_point[0]:
+        y[i] = right_touch_point[1] * (string_len - x) / right_touch_point[0]
+    else:
+        y[i] = max_pull + math.sqrt(finger_radius**2 - (finger_x - x)**2)
 
 vy = [0]*N
 next_y = [0]*N
 delta_t = 1e-5 # 10 microseconds
-delta_x = string_len / (N - 1)
 mass = 1e-3 # 1 gramm
 
 def calc_sin(dx, dy):
@@ -123,8 +127,8 @@ xdata = [i * string_len / (N - 1) for i in range(N)]
 ydata = y
 axes = plt.gca()
 axes.set_xlim(0, string_len)
-axes.set_ylim(-max_pull, max_pull)
+axes.set_ylim(-max_pull, max_pull + finger_radius)
 line, = axes.plot(xdata, ydata, 'r-')
 
 ani = matplotlib.animation.FuncAnimation( \
-    plt.gcf(), update, frames=30000, interval=1, repeat=False)
+    plt.gcf(), update, frames=120, interval=1, repeat=False)
