@@ -4,6 +4,53 @@ import matplotlib.animation
 import time
 import math
 
+class RungeKutta:
+    def __init__(self, t0, Y0, F):
+        self.t = t0
+        self.f = F
+        N = len(Y0)
+        self.Y = list(Y0) # deep for one level
+        self.YY = [0] * N
+        self.Y1 = [0] * N
+        self.Y2 = [0] * N
+        self.Y3 = [0] * N
+        self.Y4 = [0] * N
+
+    def NextStep(self, dt):
+            if (dt < 0):
+                return
+
+            # рассчитать self.Y1
+            self.Y1 = self.f(self.t, self.Y);
+
+            N = len(self.Y)
+            for i in range(N):
+                self.YY[i] = self.Y[i] + self.Y1[i] * (dt / 2.0);
+
+            # рассчитать self.Y2
+            self.Y2 = self.f(self.t + dt / 2.0, self.YY);
+
+            for i in range(N):
+                self.YY[i] = self.Y[i] + self.Y2[i] * (dt / 2.0);
+
+            # рассчитать self.Y3
+            self.Y3 = self.f(self.t + dt / 2.0, self.YY);
+
+            for i in range(N):
+                self.YY[i] = self.Y[i] + self.Y3[i] * dt;
+
+            # рассчитать self.Y4
+            self.Y4 = self.f(self.t + dt, self.YY);
+
+            # рассчитать решение на новом шаге
+            for i in range(N):
+                self.Y[i] = self.Y[i] + dt / 6.0 * (self.Y1[i] + 2.0 * self.Y2[i] + 2.0 * self.Y3[i] + self.Y4[i]);
+
+            #print(self.Y, self.YY, self.Y1, self.Y2, self.Y3, self.Y4)
+
+            # рассчитать текущее время
+            self.t = self.t + dt;
+
 def find_circle(points):
     ((x0, y0), (x1, y1), (x2, y2)) = points
     
@@ -56,7 +103,7 @@ exp_coeff_firm = exp_strength / exp_string_ext
 
 print(f"Экспериментальный коэффициент упругости: {exp_coeff_firm}")
 
-N = 1000
+N = 100
 y = [0]*N
 part_of_pulling_string = 0.2
 max_pull = 0.01 #10 mm
@@ -85,18 +132,15 @@ for i in range(N):
         y[i] = max_pull + math.sqrt(finger_radius**2 - (finger_x - x)**2)
 
 vy = [0]*N
-next_y = [0]*N
-delta_t = 1e-5 # 10 microseconds
+delta_t = 1e-6 # 1 microsecond
 mass = 1e-3 # 1 gramm
 
-def calc_sin(dx, dy):
-    return dy / math.sqrt(dx * dx + dy * dy)
-
-def update(step):
-    global y
+def diff_function(t, y):
+    FV = y[N:] # copy second part as a dF/dt
+    FA = [0] * N
     stretched_len = sum([math.sqrt((y[i+1] - y[i])**2 + delta_x**2) for i in range(N-1)])
-    max_abs_y = max(map(abs, y))
-    print(f"{step} L: {stretched_len} Ymax: {max_abs_y}")
+    #max_abs_y = max(map(abs, y))
+    #print(f"{step} L: {stretched_len} Ymax: {max_abs_y}")
     for i in range(1, N - 1):
         delta_y_left = y[i] - y[i-1]
         delta_y_right = y[i + 1] - y[i]
@@ -116,19 +160,27 @@ def update(step):
                                 (radius * 64 * delta_x)
             strength_bend = math.copysign(strength_bend_abs, y[i] - circle_y)
         
-        a = (strength_stretch * (sin_right - sin_left) + strength_bend) / (mass / N)
-        next_y[i] = y[i] + vy[i] * delta_t + a * delta_t * delta_t / 2
-        vy[i] += a * delta_t
-    y = next_y.copy()
-    line.set_ydata(y)
+        FA[i] = (strength_stretch * (sin_right - sin_left) + strength_bend) / (mass / N)
+
+    return FV + FA
+
+task = RungeKutta(0.0, y + vy, diff_function)
+
+def calc_sin(dx, dy):
+    return dy / math.sqrt(dx * dx + dy * dy)
+
+def update(step):
+    for _ in range(100):
+        task.NextStep(delta_t)
+    line.set_ydata(task.Y[0:N])
 
 plt.ion()
 xdata = [i * string_len / (N - 1) for i in range(N)]
 ydata = y
 axes = plt.gca()
 axes.set_xlim(0, string_len)
-axes.set_ylim(-max_pull, max_pull + finger_radius)
+axes.set_ylim(-max_pull - finger_radius, max_pull + finger_radius)
 line, = axes.plot(xdata, ydata, 'r-')
 
 ani = matplotlib.animation.FuncAnimation( \
-    plt.gcf(), update, frames=120, interval=1, repeat=False)
+    plt.gcf(), update, frames=1200, interval=1, repeat=False)
