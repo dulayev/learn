@@ -173,6 +173,9 @@ def update(step):
     for _ in range(100):
         task.NextStep(delta_t)
     line.set_ydata(task.Y[0:N])
+    plt.savefig(f"c:\\images\\string-{step:05d}.png")
+    # convert to video with:
+    # ffmpeg.exe -framerate 30 -i string-%05d.png -vf format=yuv420p string.mp4
 
 plt.ion()
 xdata = [i * string_len / (N - 1) for i in range(N)]
